@@ -1,0 +1,68 @@
+ubuntu base imaj ile ayrı ayrı 3 adet sunucu kur. 
+Master  Worker1 Worker2 Worker3  isimleri ver.
+
+5.1	Kubernetes Kurulumu
+
+Kubeadm kullanılarak kurulum aşağıdaki şekilde yapılır
+
+sudo apt-get update
+
+1-	Tüm node lara docker kur
+sudo apt install docker.io  curl
+docker --version
+sudo systemctl enable docker
+2-	Google gpg key inin download ed bu key i apt-key add diyerek apt nin key lerine ekle. Kubernetes reposunu repoların içine ekle.  
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+ 
+swap alanını sıfırla
+sudo swapoff –a
+
+3-	Tüm nodelara kubelet, kubeadm,kubectl kur
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+4-	MASTER NODE a Kubeadm init diyip network vererek kurulumu yap 
+Sadece MASTER üzerine aşağıdaki komut çalıştır. 
+ 
+sudo kubeadm init --pod-network-cidr=172.168.10.0/24
+ 
+5-	Aşağıdaki uyarıda denilenleri yap.
+ 
+---------------------------------------------------------------------------------------------------
+our Kubernetes control-plane has initialized successfully!
+ 
+To start using your cluster, you need to run the following as a regular user:
+ 
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+ 
+Alternatively, if you are the root user, you can run:
+ 
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+ 
+6-	You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+ 
+Then you can join any number of worker nodes by running the following on each as root:
+ 
+kubeadm join 192.168.184.101:6443 --token 6sc4hj.k3kpdfr1fk7oy52j --discovery-token-ca-cert-hash sha256:f7406eead8570a6b31d11c05b3f7fe6040544679b22efade8c96946e9858c90c 
+ 
+---------------------------------------------------------------------------------------------------
+ 
+Burada ikinci adımda belirtilen network kurulumunda flannel kurmak için 
+ 
+kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+Diyoruz ama bu komut hata verirse
+RBAC modülünüde kurmak gerek ozaman 
+kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+ 
+ 
+KURULUMU TEST ETMEK İÇİN
+ 
+Kubectl get nodes
+kubectl get pods --all-namespaces
+Docker container ls
